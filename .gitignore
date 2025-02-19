@@ -1,5 +1,6 @@
 # binaries and object files
 *.o
+*.ko
 
 # temporary directories & files
 build/
