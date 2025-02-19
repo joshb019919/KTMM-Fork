@@ -1,0 +1,5 @@
+# binaries and object files
+*.o
+
+# temporary directories & files
+build/
