@@ -1,6 +1,22 @@
-# binaries and object files
+# build files and directories
+build/*
 *.o
+*.o.cmd
 *.ko
+*.ko.cmd
+*.mod
+*.mod.c
+*.mod.cmd
+*.mod.o
+*.mod.o.cmd
+*.order
+*.order.cmd
+*.symvers
+*.symvers.cmd
 
-# temporary directories & files
-build/
+# editor settings
+.vscode/*
+.exrc
+.vimrc
+.nvimrc
+.nvim.lua
