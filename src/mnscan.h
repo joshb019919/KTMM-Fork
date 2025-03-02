@@ -2,6 +2,6 @@
 #ifndef MNSCAN_HEADER_H
 #define MNSCAN_HEADER_H
 
-void foo(void);
+int avail_nodes(void);
 
 #endif /* MNSCAN_HEADER_H */
