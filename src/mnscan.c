@@ -11,9 +11,21 @@
 
 #include "mnscan.h"
 
+
 int avail_nodes(void) {
-	int online_numa_nodes = num_online_nodes();
-	//int node_id_list[online_numa_nodes];
+	return num_online_nodes();
+}
+
+
+int avail_pages(void) {
+	//unsigned int node_id_list[MAX_NUMNODES];
+	unsigned long num_pages;
+	int nid;
 	
-	return online_numa_nodes;
+	for_each_online_node(nid) {
+		pg_data_t *pgdat = NODE_DATA(nid);
+		
+		num_pages += pgdat->node_present_pages;
+	}
+	return num_pages;
 }

@@ -21,8 +21,8 @@ static struct task_struct *kernel_thread1;
 int thread_function(void *arg) {
 	pr_info( "[TMEM MOD] Thread started..\n" );
 	while (!kthread_should_stop()) {
-		pr_info( "[ TMEM MOD ] %d online nodes.\n", avail_nodes() );
-		msleep(1000);
+		pr_info( "[ TMEM MOD ] %d online nodes with %d pages.\n", avail_nodes(), avail_pages() );
+		msleep(5000);
 	}
 	return 0;
 }

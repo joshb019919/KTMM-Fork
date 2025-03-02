@@ -4,4 +4,6 @@
 
 int avail_nodes(void);
 
+int avail_pages(void);
+
 #endif /* MNSCAN_HEADER_H */
