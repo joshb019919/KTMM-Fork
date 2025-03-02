@@ -1,8 +1,14 @@
-obj-m += hello.o
-
+KDIR ?= /lib/modules/`uname -r`/build
 PWD := $(CURDIR)
+BUILD_DIR := $(PWD)/build/
 	
-all:
-	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules
+all: $(BUILD_DIR)
+	$(MAKE) -C $(KDIR) M=$(BUILD_DIR) src=$(PWD) modules
+
+$(BUILD_DIR):
+	mkdir -p -v $@
+	touch $@/Makefile
+
 clean:
-	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean
+	$(MAKE) -C $(KDIR) M=$(BUILD_DIR) src=$(PWD) clean
+	rm -r $(BUILD_DIR)
