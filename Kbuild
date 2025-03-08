@@ -1,3 +1,3 @@
 obj-m += tmem_csc450.o
 tmem_csc450-y := src/main.o
-tmem_csc450-y += src/mnscan.o
+tmem_csc450-y += src/vmmodscan.o

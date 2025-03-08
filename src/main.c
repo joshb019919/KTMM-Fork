@@ -9,7 +9,7 @@
 #include <linux/stat.h>
 
 
-#include "mnscan.h"
+#include "vmmodscan.h"
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("CSC450 Group 4");
