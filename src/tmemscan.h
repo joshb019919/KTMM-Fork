@@ -2,8 +2,6 @@
 #ifndef TMEMSCAN_HEADER_H
 #define TMEMSCAN_HEADER_H
 
-int avail_nodes(void);
-
-int avail_pages(void);
+void avail_nodes(void);
 
 #endif /* TMEMSCAN_HEADER_H */

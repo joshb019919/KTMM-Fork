@@ -9,6 +9,7 @@
 #include <linux/memcontrol.h>
 #include <linux/mmzone.h>
 #include <linux/nodemask.h>
+#include <linux/printk.h>
 
 #include "tmemscan.h"
 
@@ -32,7 +33,9 @@ static void scan_node(pg_data_t *pgdat)
 
 	node_lru_folios = 0;
 
-	for_each_evictable_lru(lru) {
+	for_each_evictable_lru(lru) 
+	{
+		pr_info("Scanning evictable LRU list: %d\n", lru);
 		// call list_scan function
 	}
 }
@@ -41,20 +44,14 @@ static void scan_node(pg_data_t *pgdat)
 // static int mpromoted(void *p)
 
 
-int avail_nodes(void) {
-	return num_online_nodes();
-}
-
-
-int avail_pages(void) {
-	unsigned long num_pages;
+void avail_nodes(void) 
+{
 	int nid;
 	
-	for_each_online_node(nid) {
+	for_each_online_node(nid)
+	{
 		pg_data_t *pgdat = NODE_DATA(nid);
-		num_pages += pgdat->node_present_pages;
+		scan_node(pgdat);
 	}
-	return num_pages;
+	//return num_online_nodes();
 }
-
-
