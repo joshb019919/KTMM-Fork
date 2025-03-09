@@ -4,7 +4,6 @@
  *  Page scanning and related functions for tmem module.
  *
  */
-//#include <linux/kallsyms.h>
 #include <linux/kernel.h>
 #include <linux/kprobes.h>
 #include <linux/module.h>
@@ -12,6 +11,7 @@
 #include <linux/mmzone.h>
 #include <linux/nodemask.h>
 #include <linux/printk.h>
+#include <linux/spinlock.h>
 
 #include "tmemscan.h"
 
@@ -24,13 +24,20 @@ static struct kprobe kp = {
 };
 
 
+/* need to aquire spinlock before calling this function */
+static void scan_list(pg_data_t *pgdat, int nid, struct lruvec *lruvec)
+{
+	// code here
+}
+
+
 // (pg_data_t *pgdat, struct scan_control tsc)
 /*
  * This is really hacky, but we had no other choice.
  */
 static void scan_node(pg_data_t *pgdat, int nid)
 {
-	//enum lru_list lru;
+	enum lru_list lru;
 	struct mem_cgroup *memcg;
 	struct mem_cgroup *root;
 	struct lruvec *lruvec;
@@ -68,15 +75,15 @@ static void scan_node(pg_data_t *pgdat, int nid)
 		// finally, get some!!
 		lruvec = &memcg->nodeinfo[nid]->lruvec;
 
-		pr_info("Lruvec Populated Zones: %d\n", lruvec->pgdat->nr_zones);
-		
-		/*
 		for_each_evictable_lru(lru) 
 		{
 			pr_info("Scanning evictable LRU list: %d\n", lru);
+			
+			spin_lock_irqsave(&lruvec->lru_lock);
 			// call list_scan function
+			
+			spin_lock_irqrestore(&lruvec->lru_lock);
 		}
-		*/
 	}
 	else
 		pr_info("tmem unable to get LRU lists");
@@ -93,7 +100,6 @@ void avail_nodes(void)
 	for_each_online_node(nid)
 	{
 		pg_data_t *pgdat = NODE_DATA(nid);
-		pr_info("Node Populated Zones: %d\n", pgdat->nr_zones);
 		scan_node(pgdat, nid);
 	}
 	//return num_online_nodes();
