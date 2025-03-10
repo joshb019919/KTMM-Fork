@@ -4,8 +4,10 @@
  *  Page scanning and related functions for tmem module.
  *
  */
+#include <linux/atomic.h>
 #include <linux/kernel.h>
 #include <linux/kprobes.h>
+#include <linux/list.h>
 #include <linux/module.h>
 #include <linux/memcontrol.h>
 #include <linux/mmzone.h>
@@ -25,13 +27,17 @@ static struct kprobe kp = {
 
 
 /* need to aquire spinlock before calling this function */
-static void scan_list(pg_data_t *pgdat, int nid, struct lruvec *lruvec)
+static void scan_list(struct list_head *list, enum lru_list lru)
 {
-	// code here
+	struct folio *folio, *next;
+
+	list_for_each_entry_safe(folio, next, list, lru)
+	{
+		//access folio reference here
+	}
 }
 
 
-// (pg_data_t *pgdat, struct scan_control tsc)
 /*
  * This is really hacky, but we had no other choice.
  */
@@ -44,6 +50,7 @@ static void scan_node(pg_data_t *pgdat, int nid)
 	unsigned long cgroup_iter_addr;
 	unsigned long node_lru_folios;
 
+	// define the kallsyms_lookup_name function with kprobe
 	typedef unsigned long (*kallsyms_lookup_name_t)(const char *name);
 	kallsyms_lookup_name_t kallsyms_lookup_name;
 	register_kprobe(&kp);
@@ -57,7 +64,7 @@ static void scan_node(pg_data_t *pgdat, int nid)
 	{
 		pr_info("mem_cgroup_iter addr: %lu\n", cgroup_iter_addr);
 
-		// sorry, this is a pile of shit
+		// get the mem_cgroup_iter() function from memory address
 		struct mem_cgroup *(*cgroup_iter_fn)(struct mem_cgroup *root, 
 			struct mem_cgroup *prev,
 			struct mem_cgroup_reclaim_cookie *reclaim)
@@ -77,12 +84,17 @@ static void scan_node(pg_data_t *pgdat, int nid)
 
 		for_each_evictable_lru(lru) 
 		{
+			unsigned long flags;
+			struct list_head *list;
+			list = &lruvec->lists[lru];
+
 			pr_info("Scanning evictable LRU list: %d\n", lru);
-			
-			spin_lock_irqsave(&lruvec->lru_lock);
+
+			spin_lock_irqsave(&lruvec->lru_lock, flags);
 			// call list_scan function
+			scan_list(list, lru);
 			
-			spin_lock_irqrestore(&lruvec->lru_lock);
+			spin_unlock_irqrestore(&lruvec->lru_lock, flags);
 		}
 	}
 	else
