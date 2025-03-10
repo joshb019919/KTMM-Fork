@@ -5,6 +5,7 @@
  *
  */
 #include <linux/atomic.h>
+#include <linux/bitops.h>
 #include <linux/kernel.h>
 #include <linux/kprobes.h>
 #include <linux/list.h>
@@ -12,6 +13,7 @@
 #include <linux/memcontrol.h>
 #include <linux/mmzone.h>
 #include <linux/nodemask.h>
+#include <linux/page-flags.h>
 #include <linux/page_ref.h>
 #include <linux/printk.h>
 #include <linux/spinlock.h>
@@ -28,18 +30,21 @@ static struct kprobe kp = {
 
 
 /* need to aquire spinlock before calling this function */
-static int scan_list(struct list_head *list, enum lru_list lru)
+static unsigned int scan_list(struct list_head *list, enum lru_list lru)
 {
 	struct folio *folio, *next;
-	int count;
+	unsigned int folio_referenced_count;
+
+	folio_referenced_count = 0;
 
 	list_for_each_entry_safe(folio, next, list, lru)
 	{
-		//access folio reference here
-		count = folio_ref_count(folio);
+		//
+		if(test_bit(PG_referenced, &folio->flags))
+			folio_referenced_count++;
 	}
 
-	return count;
+	return folio_referenced_count;
 }
 
 
@@ -89,7 +94,7 @@ static void scan_node(pg_data_t *pgdat, int nid)
 
 		for_each_evictable_lru(lru) 
 		{
-			int ref_count;
+			unsigned int ref_count;
 			unsigned long flags;
 			struct list_head *list;
 			list = &lruvec->lists[lru];
