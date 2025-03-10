@@ -12,6 +12,7 @@
 #include <linux/memcontrol.h>
 #include <linux/mmzone.h>
 #include <linux/nodemask.h>
+#include <linux/page_ref.h>
 #include <linux/printk.h>
 #include <linux/spinlock.h>
 
@@ -27,14 +28,18 @@ static struct kprobe kp = {
 
 
 /* need to aquire spinlock before calling this function */
-static void scan_list(struct list_head *list, enum lru_list lru)
+static int scan_list(struct list_head *list, enum lru_list lru)
 {
 	struct folio *folio, *next;
+	int count;
 
 	list_for_each_entry_safe(folio, next, list, lru)
 	{
 		//access folio reference here
+		count = folio_ref_count(folio);
 	}
+
+	return count;
 }
 
 
@@ -84,6 +89,7 @@ static void scan_node(pg_data_t *pgdat, int nid)
 
 		for_each_evictable_lru(lru) 
 		{
+			int ref_count;
 			unsigned long flags;
 			struct list_head *list;
 			list = &lruvec->lists[lru];
@@ -92,9 +98,11 @@ static void scan_node(pg_data_t *pgdat, int nid)
 
 			spin_lock_irqsave(&lruvec->lru_lock, flags);
 			// call list_scan function
-			scan_list(list, lru);
+			ref_count = scan_list(list, lru);
 			
 			spin_unlock_irqrestore(&lruvec->lru_lock, flags);
+
+			pr_info("Reference count: %d\n", ref_count);
 		}
 	}
 	else
