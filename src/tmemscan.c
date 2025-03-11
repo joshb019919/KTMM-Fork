@@ -29,22 +29,32 @@ static struct kprobe kp = {
 };
 
 
-/* need to aquire spinlock before calling this function */
-static unsigned int scan_list(struct list_head *list, enum lru_list lru)
+/* need to acquire spinlock before calling this function */
+
+/**
+ * scan_lru_list - scan LRU list for recently accessed pages
+ *
+ * @list:	the LRU list to scan
+ *
+ * @returns:	Number of pages with a reference bit set
+ *
+ * Iterates through the pages in the LRU list and records
+ * the number of pages that have the reference bit set.
+ */
+static unsigned int scan_lru_list(struct list_head *list)
 {
-	struct folio *folio, *next;
-	unsigned int folio_referenced_count;
+	struct page *page, *next;
+	unsigned int nr_page_refs; //number of pages w/ reference bit set
 
-	folio_referenced_count = 0;
-
-	list_for_each_entry_safe(folio, next, list, lru)
+	nr_page_refs = 0;
+	list_for_each_entry_safe(page, next, list, lru)
 	{
 		//
-		if(test_bit(PG_referenced, &folio->flags))
-			folio_referenced_count++;
+		if(test_bit(PG_referenced, &page->flags))
+			nr_page_refs++;
 	}
 
-	return folio_referenced_count;
+	return nr_page_refs;
 }
 
 
