@@ -1,4 +1,5 @@
 # build files and directories
+docs/_build/*
 build/*
 *.o
 *.o.cmd
