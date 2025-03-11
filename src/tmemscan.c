@@ -24,6 +24,9 @@
 // static struct scan_control = { }
 
 
+/**
+ * These should be moved later to its own file for generic use.
+ */
 typedef unsigned long (*kallsyms_lookup_name_t)(const char *name);
 kallsyms_lookup_name_t tmem_kallsyms_lookup_name;
 
@@ -40,6 +43,10 @@ void init_kallsyms()
 	unregister_kprobe(&kp);
 }
 
+
+/*****************************************************************************
+ * Node Scanning Functions
+ *****************************************************************************/
 
 /* need to acquire spinlock before calling this function */
 
@@ -70,7 +77,12 @@ static unsigned int scan_lru_list(struct list_head *list)
 }
 
 
-/*
+/**
+ * scan_node - scan a node's LRU lists
+ * 
+ * @pgdat:	node data struct
+ * @nid:	node ID number
+ *
  * This is really hacky, but we had no other choice.
  */
 static void scan_node(pg_data_t *pgdat, int nid)
@@ -81,10 +93,12 @@ static void scan_node(pg_data_t *pgdat, int nid)
 	struct lruvec *lruvec;
 	unsigned long cgroup_iter_addr;
 
+	// obtain address of mem_cgroup_iter()
 	cgroup_iter_addr = tmem_kallsyms_lookup_name("mem_cgroup_iter");
 
 	if(cgroup_iter_addr)
 	{
+		// for debug purposes, change later
 		pr_info("mem_cgroup_iter function addr: %lu\n", cgroup_iter_addr);
 
 		// get the mem_cgroup_iter() function from memory address
@@ -96,6 +110,7 @@ static void scan_node(pg_data_t *pgdat, int nid)
 				struct mem_cgroup_reclaim_cookie *)
 				)cgroup_iter_addr;
 
+		// get memory cgroup for the node
 		root = NULL;
 		memcg = cgroup_iter_fn(root, NULL, NULL);
 
@@ -109,6 +124,7 @@ static void scan_node(pg_data_t *pgdat, int nid)
 			struct list_head *list;
 			list = &lruvec->lists[lru];
 
+			// for debug purposes, change later
 			pr_info("Scanning evictable LRU list: %d\n", lru);
 
 			spin_lock_irqsave(&lruvec->lru_lock, flags);
@@ -117,6 +133,7 @@ static void scan_node(pg_data_t *pgdat, int nid)
 			
 			spin_unlock_irqrestore(&lruvec->lru_lock, flags);
 
+			// for debug purpses, change later
 			pr_info("Reference count: %d\n", ref_count);
 		}
 	}
@@ -128,6 +145,9 @@ static void scan_node(pg_data_t *pgdat, int nid)
 // static int mpromoted(void *p)
 
 
+/**
+ * avail_nodes - scan the available system nodes
+ */
 void avail_nodes(void) 
 {
 	int nid;
