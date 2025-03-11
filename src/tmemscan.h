@@ -4,4 +4,6 @@
 
 void avail_nodes(void);
 
+void init_kallsyms(void);
+
 #endif /* TMEMSCAN_HEADER_H */

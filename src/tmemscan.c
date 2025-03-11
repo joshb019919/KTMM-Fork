@@ -24,9 +24,21 @@
 // static struct scan_control = { }
 
 
+typedef unsigned long (*kallsyms_lookup_name_t)(const char *name);
+kallsyms_lookup_name_t tmem_kallsyms_lookup_name;
+
+
 static struct kprobe kp = {
 	.symbol_name = "kallsyms_lookup_name"
 };
+
+
+void init_kallsyms()
+{
+	register_kprobe(&kp);
+	tmem_kallsyms_lookup_name = (kallsyms_lookup_name_t) kp.addr;
+	unregister_kprobe(&kp);
+}
 
 
 /* need to acquire spinlock before calling this function */
@@ -68,21 +80,12 @@ static void scan_node(pg_data_t *pgdat, int nid)
 	struct mem_cgroup *root;
 	struct lruvec *lruvec;
 	unsigned long cgroup_iter_addr;
-	unsigned long node_lru_folios;
 
-	// define the kallsyms_lookup_name function with kprobe
-	typedef unsigned long (*kallsyms_lookup_name_t)(const char *name);
-	kallsyms_lookup_name_t kallsyms_lookup_name;
-	register_kprobe(&kp);
-	kallsyms_lookup_name = (kallsyms_lookup_name_t) kp.addr;
-	unregister_kprobe(&kp);
-
-
-	cgroup_iter_addr = kallsyms_lookup_name("mem_cgroup_iter");
+	cgroup_iter_addr = tmem_kallsyms_lookup_name("mem_cgroup_iter");
 
 	if(cgroup_iter_addr)
 	{
-		pr_info("mem_cgroup_iter addr: %lu\n", cgroup_iter_addr);
+		pr_info("mem_cgroup_iter function addr: %lu\n", cgroup_iter_addr);
 
 		// get the mem_cgroup_iter() function from memory address
 		struct mem_cgroup *(*cgroup_iter_fn)(struct mem_cgroup *root, 
@@ -94,14 +97,11 @@ static void scan_node(pg_data_t *pgdat, int nid)
 				)cgroup_iter_addr;
 
 		root = NULL;
-
 		memcg = cgroup_iter_fn(root, NULL, NULL);
 
-		node_lru_folios = 0;
-
-		// finally, get some!!
 		lruvec = &memcg->nodeinfo[nid]->lruvec;
 
+		// scan the LRU lists
 		for_each_evictable_lru(lru) 
 		{
 			unsigned int ref_count;
@@ -113,7 +113,7 @@ static void scan_node(pg_data_t *pgdat, int nid)
 
 			spin_lock_irqsave(&lruvec->lru_lock, flags);
 			// call list_scan function
-			ref_count = scan_list(list, lru);
+			ref_count = scan_lru_list(list);
 			
 			spin_unlock_irqrestore(&lruvec->lru_lock, flags);
 

@@ -20,6 +20,7 @@ static struct task_struct *kernel_thread1;
 
 int thread_function(void *arg) {
 	pr_info( "tmem-csc450 thread started..\n" );
+	init_kallsyms();
 	while (!kthread_should_stop()) {
 		avail_nodes();
 		msleep(10000);
