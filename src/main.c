@@ -9,6 +9,8 @@
 #include <linux/stat.h>
 
 
+#include "tmemscan.h"
+
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("CSC450 Group 4");
 MODULE_DESCRIPTION("Tiered memory module.");
@@ -18,24 +20,25 @@ static struct task_struct *kernel_thread1;
 
 
 int thread_function(void *arg) {
-	int i = 0;
+	pr_info( "tmem-csc450 thread started..\n" );
+	init_kallsyms();
 	while (!kthread_should_stop()) {
-		pr_info("%d\n", i++);
-		msleep(1000);
+		avail_nodes();
+		msleep(10000);
 	}
 	return 0;
 }
 
 
 static int __init tmem_init(void) {
-	printk(KERN_INFO "Hello world!\n");
+	pr_info( "tmem-csc450 module initializing..\n" );
 	kernel_thread1 = kthread_run(&thread_function, NULL, "thread_function");
 	return 0;
 }
 
 
 static void __exit tmem_exit(void) {
-	printk(KERN_INFO "Goodbye world!\n");
+	pr_info("tmem-csc450 exiting..\n");
 	kthread_stop(kernel_thread1);
 }
 
