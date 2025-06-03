@@ -66,7 +66,7 @@ static void notrace hook_function_set_ip(unsigned long ip,
 {
 	struct ktmm_hook *hook = container_of(ops, struct ktmm_hook, ops);
 
-	ftrace_instruction_pointer_set(regs, hook->module_addr);
+	instruction_pointer_set(regs, hook->module_addr);
 }
 
 /**

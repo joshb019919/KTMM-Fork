@@ -1,16 +1,15 @@
-KDIR ?= /lib/modules/`uname -r`/build
+KDIR = /lib/modules/`uname -r`/build
 PWD := $(CURDIR)
-BUILD_DIR := $(PWD)/build/
+BUILDDIR := $(PWD)/build
 
-.PHONY: all
-all: $(BUILD_DIR)
-	$(MAKE) -C $(KDIR) M=$(BUILD_DIR) src=$(PWD) modules
+obj-m += ktmm.o
+ktmm-y := ktmm_main.o 
+ktmm-y += ktmm_hook.o 
+ktmm-y += ktmm_vmscan.o
 
-$(BUILD_DIR):
-	mkdir -p -v $@
-	touch $@/Makefile
+all:
+	$(MAKE) -C $(KDIR) M=$(PWD) src=$(PWD) MO=$(BUILDDIR) modules
 
-.PHONY: clean
 clean:
-	$(MAKE) -C $(KDIR) M=$(BUILD_DIR) src=$(PWD) clean
-	rm -r $(BUILD_DIR)
+	$(MAKE) -C $(KDIR) M=$(PWD) clean
+	
